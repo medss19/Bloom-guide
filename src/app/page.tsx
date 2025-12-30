@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { LearningMode, MissedQuestion, WeakTopic, StudiedCard } from '@/lib/types'
 import { recordExplain, recordQuizResult, recordFlashcardSet, getWeakTopics } from '@/lib/storage'
 import ExplainMode from '@/components/ExplainMode'
@@ -12,13 +13,27 @@ import VoiceInput from '@/components/VoiceInput'
 import AuthButton from '@/components/AuthButton'
 import MultiplayerMode from '@/components/MultiplayerMode'
 
-export default function Home() {
+function HomeContent() {
+  const searchParams = useSearchParams()
   const [currentMode, setCurrentMode] = useState<LearningMode | null>(null)
   const [topic, setTopic] = useState('')
   const [inputValue, setInputValue] = useState('')
   const [showReview, setShowReview] = useState(false)
   const [showMultiplayer, setShowMultiplayer] = useState(false)
   const [weakTopics, setWeakTopics] = useState<WeakTopic[]>([])
+
+  // Check for review URL parameter on mount
+  useEffect(() => {
+    const topics = getWeakTopics()
+    setWeakTopics(topics)
+
+    // Auto-open review mode if ?review=true is in URL and there are weak topics
+    if (searchParams.get('review') === 'true' && topics.length > 0) {
+      setShowReview(true)
+      // Clean up URL without reload
+      window.history.replaceState({}, '', '/')
+    }
+  }, [searchParams])
 
   useEffect(() => {
     setWeakTopics(getWeakTopics())
@@ -410,5 +425,14 @@ export default function Home() {
         <MultiplayerMode onClose={() => setShowMultiplayer(false)} />
       )}
     </div>
+  )
+}
+
+// Wrap with Suspense for useSearchParams
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-b from-green-50 to-white" />}>
+      <HomeContent />
+    </Suspense>
   )
 }

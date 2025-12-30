@@ -374,7 +374,7 @@ export default function Dashboard() {
                 Topics to Review
               </h2>
               <Link
-                href="/"
+                href="/?review=true"
                 className="text-sm text-red-600 hover:text-red-700 font-medium"
               >
                 Practice Now →
