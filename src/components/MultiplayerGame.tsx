@@ -101,28 +101,62 @@ export default function MultiplayerGame({ room: initialRoom, onComplete }: Multi
   const isGameFinished = room.status === 'finished' ||
     (currentPlayer && currentPlayer.answers.filter(a => a !== undefined).length === room.questions.length)
 
-  // Save result when game finishes
+  // Save result when game finishes - fetch latest room state first
   useEffect(() => {
     if (isGameFinished && !resultSavedRef.current && currentPlayer) {
       resultSavedRef.current = true
 
-      const playerRank = sortedPlayers.findIndex(p => p.id === userId) + 1
-      const playerResults = sortedPlayers.map(p => ({
-        name: p.name,
-        score: p.score,
-        isYou: p.id === userId
-      }))
+      // Fetch the latest room state to ensure we have accurate scores
+      const saveResults = async () => {
+        try {
+          const res = await fetch(`/api/multiplayer/room?roomId=${room.id}`)
+          if (res.ok) {
+            const data = await res.json()
+            const latestRoom = data.room as GameRoom
+            const latestSortedPlayers = [...latestRoom.players].sort((a, b) => b.score - a.score)
+            const latestPlayer = latestRoom.players.find(p => p.id === userId)
 
-      recordMultiplayerResult(
-        room.id,
-        room.topic,
-        currentPlayer.score,
-        room.questions.length,
-        playerRank,
-        room.players.length,
-        playerResults,
-        missedQuestions.length > 0 ? missedQuestions : undefined
-      )
+            const playerRank = latestSortedPlayers.findIndex(p => p.id === userId) + 1
+            const playerResults = latestSortedPlayers.map(p => ({
+              name: p.name,
+              score: p.score,
+              isYou: p.id === userId
+            }))
+
+            recordMultiplayerResult(
+              latestRoom.id,
+              latestRoom.topic,
+              latestPlayer?.score || 0,
+              latestRoom.questions.length,
+              playerRank,
+              latestRoom.players.length,
+              playerResults,
+              missedQuestions.length > 0 ? missedQuestions : undefined
+            )
+          }
+        } catch (err) {
+          // Fallback to local state if fetch fails
+          const playerRank = sortedPlayers.findIndex(p => p.id === userId) + 1
+          const playerResults = sortedPlayers.map(p => ({
+            name: p.name,
+            score: p.score,
+            isYou: p.id === userId
+          }))
+
+          recordMultiplayerResult(
+            room.id,
+            room.topic,
+            currentPlayer.score,
+            room.questions.length,
+            playerRank,
+            room.players.length,
+            playerResults,
+            missedQuestions.length > 0 ? missedQuestions : undefined
+          )
+        }
+      }
+
+      saveResults()
     }
   }, [isGameFinished, currentPlayer, sortedPlayers, userId, room, missedQuestions])
 
@@ -221,31 +255,40 @@ export default function MultiplayerGame({ room: initialRoom, onComplete }: Multi
               <p className="text-sm opacity-90">Question {currentQuestion + 1} of {room.questions.length}</p>
               <h2 className="text-lg font-bold">{room.topic}</h2>
             </div>
-            <div className="flex items-center gap-4">
-              {/* Mini leaderboard */}
-              <div className="flex -space-x-2">
-                {sortedPlayers.slice(0, 3).map((player, idx) => {
-                  const initials = player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
-                  return (
-                    <div
-                      key={player.id}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 border-white overflow-hidden ${
-                        idx === 0 ? 'bg-yellow-500 z-30' :
-                        idx === 1 ? 'bg-gray-400 z-20' :
-                        'bg-orange-400 z-10'
-                      }`}
-                      title={`${player.name}: ${player.score}`}
-                    >
-                      {player.image ? (
-                        <img src={player.image} alt={player.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-white">{initials || player.score}</span>
-                      )}
+          </div>
+
+          {/* Live Scoreboard */}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {sortedPlayers.map((player, idx) => {
+              const initials = player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+              const isYou = player.id === userId
+              return (
+                <div
+                  key={player.id}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
+                    idx === 0 ? 'bg-yellow-400/30' :
+                    isYou ? 'bg-white/20' : 'bg-white/10'
+                  }`}
+                >
+                  {player.image ? (
+                    <img src={player.image} alt={player.name} className="w-6 h-6 rounded-full object-cover" />
+                  ) : (
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      idx === 0 ? 'bg-yellow-500' : 'bg-white/30'
+                    }`}>
+                      {initials}
                     </div>
-                  )
-                })}
-              </div>
-            </div>
+                  )}
+                  <span className="text-sm font-medium">
+                    {player.name.split(' ')[0]}
+                    {isYou && <span className="text-xs opacity-75"> (You)</span>}
+                  </span>
+                  <span className="text-sm font-bold bg-white/20 px-2 py-0.5 rounded-full">
+                    {player.score}
+                  </span>
+                </div>
+              )
+            })}
           </div>
         </div>
 
