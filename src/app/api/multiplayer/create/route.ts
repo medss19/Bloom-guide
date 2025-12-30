@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
     const room = createRoom(
       session.user.id || session.user.email || 'anonymous',
       session.user.name || 'Player',
-      topic
+      topic,
+      session.user.image || undefined
     )
 
     return NextResponse.json({

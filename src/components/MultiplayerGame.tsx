@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { GameRoom } from '@/lib/multiplayer'
+import { recordMultiplayerResult } from '@/lib/storage'
+import { MissedQuestion } from '@/lib/types'
 
 interface MultiplayerGameProps {
   room: GameRoom
@@ -17,6 +19,8 @@ export default function MultiplayerGame({ room: initialRoom, onComplete }: Multi
   const [showResult, setShowResult] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [missedQuestions, setMissedQuestions] = useState<MissedQuestion[]>([])
+  const resultSavedRef = useRef(false)
 
   const userId = session?.user?.id || session?.user?.email || 'anonymous'
   const currentPlayer = room.players.find(p => p.id === userId)
@@ -63,6 +67,17 @@ export default function MultiplayerGame({ room: initialRoom, onComplete }: Multi
         setIsCorrect(data.correct)
         setRoom(data.room)
         setShowResult(true)
+
+        // Track missed questions
+        if (!data.correct && question) {
+          setMissedQuestions(prev => [...prev, {
+            question: question.question,
+            userAnswer: question.options[answerIndex],
+            correctAnswer: question.options[question.correctIndex],
+            explanation: '',
+            topic: room.topic
+          }])
+        }
       }
     } catch (err) {
       console.error('Submit error:', err)
@@ -86,6 +101,31 @@ export default function MultiplayerGame({ room: initialRoom, onComplete }: Multi
   const isGameFinished = room.status === 'finished' ||
     (currentPlayer && currentPlayer.answers.filter(a => a !== undefined).length === room.questions.length)
 
+  // Save result when game finishes
+  useEffect(() => {
+    if (isGameFinished && !resultSavedRef.current && currentPlayer) {
+      resultSavedRef.current = true
+
+      const playerRank = sortedPlayers.findIndex(p => p.id === userId) + 1
+      const playerResults = sortedPlayers.map(p => ({
+        name: p.name,
+        score: p.score,
+        isYou: p.id === userId
+      }))
+
+      recordMultiplayerResult(
+        room.id,
+        room.topic,
+        currentPlayer.score,
+        room.questions.length,
+        playerRank,
+        room.players.length,
+        playerResults,
+        missedQuestions.length > 0 ? missedQuestions : undefined
+      )
+    }
+  }, [isGameFinished, currentPlayer, sortedPlayers, userId, room, missedQuestions])
+
   if (isGameFinished) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -107,38 +147,56 @@ export default function MultiplayerGame({ room: initialRoom, onComplete }: Multi
               Final Standings
             </h3>
             <div className="space-y-3">
-              {sortedPlayers.map((player, idx) => (
-                <div
-                  key={player.id}
-                  className={`flex items-center gap-3 p-3 rounded-xl ${
-                    idx === 0 ? 'bg-yellow-50 border-2 border-yellow-200' :
-                    idx === 1 ? 'bg-gray-100' :
-                    idx === 2 ? 'bg-orange-50' : 'bg-gray-50'
-                  }`}
-                >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                    idx === 0 ? 'bg-yellow-500 text-white' :
-                    idx === 1 ? 'bg-gray-400 text-white' :
-                    idx === 2 ? 'bg-orange-400 text-white' : 'bg-gray-300 text-gray-600'
-                  }`}>
-                    {idx + 1}
+              {sortedPlayers.map((player, idx) => {
+                const initials = player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+                return (
+                  <div
+                    key={player.id}
+                    className={`flex items-center gap-3 p-3 rounded-xl ${
+                      idx === 0 ? 'bg-yellow-50 border-2 border-yellow-200' :
+                      idx === 1 ? 'bg-gray-100' :
+                      idx === 2 ? 'bg-orange-50' : 'bg-gray-50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                      idx === 0 ? 'bg-yellow-500 text-white' :
+                      idx === 1 ? 'bg-gray-400 text-white' :
+                      idx === 2 ? 'bg-orange-400 text-white' : 'bg-gray-300 text-gray-600'
+                    }`}>
+                      {idx + 1}
+                    </div>
+                    {player.image ? (
+                      <img
+                        src={player.image}
+                        alt={player.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
+                        idx === 0 ? 'bg-yellow-500' :
+                        idx === 1 ? 'bg-gray-400' :
+                        idx === 2 ? 'bg-orange-400' : 'bg-indigo-500'
+                      }`}>
+                        {initials || player.name[0]}
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">
+                        {player.name}
+                        {player.id === userId && (
+                          <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full ml-2">
+                            You
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-gray-900">{player.score}</p>
+                      <p className="text-xs text-gray-500">/{room.questions.length}</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">
-                      {player.name}
-                      {player.id === userId && (
-                        <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full ml-2">
-                          You
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-gray-900">{player.score}</p>
-                    <p className="text-xs text-gray-500">/{room.questions.length}</p>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             <button
@@ -166,19 +224,26 @@ export default function MultiplayerGame({ room: initialRoom, onComplete }: Multi
             <div className="flex items-center gap-4">
               {/* Mini leaderboard */}
               <div className="flex -space-x-2">
-                {sortedPlayers.slice(0, 3).map((player, idx) => (
-                  <div
-                    key={player.id}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 border-white ${
-                      idx === 0 ? 'bg-yellow-500 z-30' :
-                      idx === 1 ? 'bg-gray-400 z-20' :
-                      'bg-orange-400 z-10'
-                    }`}
-                    title={`${player.name}: ${player.score}`}
-                  >
-                    {player.score}
-                  </div>
-                ))}
+                {sortedPlayers.slice(0, 3).map((player, idx) => {
+                  const initials = player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+                  return (
+                    <div
+                      key={player.id}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 border-white overflow-hidden ${
+                        idx === 0 ? 'bg-yellow-500 z-30' :
+                        idx === 1 ? 'bg-gray-400 z-20' :
+                        'bg-orange-400 z-10'
+                      }`}
+                      title={`${player.name}: ${player.score}`}
+                    >
+                      {player.image ? (
+                        <img src={player.image} alt={player.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-white">{initials || player.score}</span>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>

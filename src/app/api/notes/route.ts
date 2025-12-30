@@ -94,8 +94,18 @@ Generate the study notes now:`
     }
 
     throw lastError || new Error('Failed after retries')
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Notes API Error:', error)
+
+    // Check for quota/rate limit errors
+    const err = error as { status?: number; message?: string }
+    if (err.status === 429 || (err.message && err.message.includes('quota'))) {
+      return NextResponse.json(
+        { error: 'API limit reached. Please wait a moment and try again.' },
+        { status: 429 }
+      )
+    }
+
     return NextResponse.json(
       { error: 'Failed to generate notes. Please try again.' },
       { status: 500 }

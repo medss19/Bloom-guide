@@ -75,10 +75,30 @@ export interface UserStats {
   totalExplains: number
   totalQuizzes: number
   totalFlashcards: number
+  totalMultiplayerGames: number
   quizzesPassed: number
   avgQuizScore: number
   flashcardsLearned: number
+  multiplayerWins: number
   streak: number
   lastActiveDate: string
   recentTopics: string[]
+}
+
+export interface MultiplayerResult {
+  id: string
+  roomId: string
+  topic: string
+  score: number
+  total: number
+  rank: number
+  totalPlayers: number
+  won: boolean
+  completedAt: number
+  missedQuestions?: MissedQuestion[]
+  players: {
+    name: string
+    score: number
+    isYou: boolean
+  }[]
 }

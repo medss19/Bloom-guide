@@ -4,6 +4,7 @@
 export interface Player {
   id: string
   name: string
+  image?: string  // Profile picture URL
   score: number
   answers: number[]  // Index of selected answers
   finishedAt?: number
@@ -40,7 +41,7 @@ export function generateRoomCode(): string {
   return code
 }
 
-export function createRoom(hostId: string, hostName: string, topic: string): GameRoom {
+export function createRoom(hostId: string, hostName: string, topic: string, hostImage?: string): GameRoom {
   let code = generateRoomCode()
   // Ensure unique code
   while (rooms.has(code)) {
@@ -55,6 +56,7 @@ export function createRoom(hostId: string, hostName: string, topic: string): Gam
     players: [{
       id: hostId,
       name: hostName,
+      image: hostImage,
       score: 0,
       answers: []
     }],
@@ -71,7 +73,7 @@ export function getRoom(roomId: string): GameRoom | undefined {
   return rooms.get(roomId.toUpperCase())
 }
 
-export function joinRoom(roomId: string, playerId: string, playerName: string): GameRoom | null {
+export function joinRoom(roomId: string, playerId: string, playerName: string, playerImage?: string): GameRoom | null {
   const room = rooms.get(roomId.toUpperCase())
   if (!room) return null
   if (room.status !== 'waiting') return null
@@ -81,12 +83,14 @@ export function joinRoom(roomId: string, playerId: string, playerName: string): 
   const existingPlayer = room.players.find(p => p.id === playerId)
   if (existingPlayer) {
     existingPlayer.name = playerName  // Update name if rejoining
+    existingPlayer.image = playerImage
     return room
   }
 
   room.players.push({
     id: playerId,
     name: playerName,
+    image: playerImage,
     score: 0,
     answers: []
   })

@@ -137,29 +137,40 @@ export default function MultiplayerLobby({ room: initialRoom, onGameStart, onClo
               Players ({room.players.length}/8)
             </p>
             <div className="space-y-2">
-              {room.players.map((player, idx) => (
-                <div
-                  key={player.id}
-                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
-                >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
-                    idx === 0 ? 'bg-yellow-500' : 'bg-indigo-500'
-                  }`}>
-                    {player.name[0]}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{player.name}</p>
-                    {player.id === room.hostId && (
-                      <p className="text-xs text-yellow-600">Host</p>
+              {room.players.map((player, idx) => {
+                const initials = player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+                return (
+                  <div
+                    key={player.id}
+                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
+                  >
+                    {player.image ? (
+                      <img
+                        src={player.image}
+                        alt={player.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
+                        player.id === room.hostId ? 'bg-yellow-500' : 'bg-indigo-500'
+                      }`}>
+                        {initials || player.name[0]}
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">{player.name}</p>
+                      {player.id === room.hostId && (
+                        <p className="text-xs text-yellow-600">Host</p>
+                      )}
+                    </div>
+                    {player.id === userId && (
+                      <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-1 rounded-full">
+                        You
+                      </span>
                     )}
                   </div>
-                  {player.id === userId && (
-                    <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-1 rounded-full">
-                      You
-                    </span>
-                  )}
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 

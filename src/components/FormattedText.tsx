@@ -7,7 +7,7 @@ interface FormattedTextProps {
   className?: string
 }
 
-// Renders text with inline code (`code`) and code blocks (```code```) formatted nicely
+// Renders text with inline code (`code`), code blocks (```code```), **bold**, and *italic*
 export default function FormattedText({ text, className = '' }: FormattedTextProps) {
   // Parse the text for code blocks and inline code
   const parts = parseCodeBlocks(text)
@@ -33,6 +33,10 @@ export default function FormattedText({ text, className = '' }: FormattedTextPro
               {part.content}
             </code>
           )
+        } else if (part.type === 'bold') {
+          return <strong key={idx} className="font-semibold">{part.content}</strong>
+        } else if (part.type === 'italic') {
+          return <em key={idx} className="italic">{part.content}</em>
         } else {
           return <span key={idx}>{part.content}</span>
         }
@@ -42,7 +46,7 @@ export default function FormattedText({ text, className = '' }: FormattedTextPro
 }
 
 interface ParsedPart {
-  type: 'text' | 'codeblock' | 'inlinecode'
+  type: 'text' | 'codeblock' | 'inlinecode' | 'bold' | 'italic'
   content: string
 }
 
@@ -87,10 +91,7 @@ function parseInlineCode(text: string): ParsedPart[] {
   while ((match = inlineCodeRegex.exec(text)) !== null) {
     // Add text before the inline code
     if (match.index > lastIndex) {
-      parts.push({
-        type: 'text',
-        content: text.slice(lastIndex, match.index)
-      })
+      parts.push(...parseBoldItalic(text.slice(lastIndex, match.index)))
     }
 
     // Add the inline code
@@ -98,6 +99,48 @@ function parseInlineCode(text: string): ParsedPart[] {
       type: 'inlinecode',
       content: match[1]
     })
+
+    lastIndex = match.index + match[0].length
+  }
+
+  // Add remaining text
+  if (lastIndex < text.length) {
+    parts.push(...parseBoldItalic(text.slice(lastIndex)))
+  }
+
+  return parts
+}
+
+function parseBoldItalic(text: string): ParsedPart[] {
+  const parts: ParsedPart[] = []
+  // Match **bold** or *italic* (bold first to avoid conflict)
+  const regex = /\*\*([^*]+)\*\*|\*([^*]+)\*/g
+  let lastIndex = 0
+  let match
+
+  while ((match = regex.exec(text)) !== null) {
+    // Add text before the match
+    if (match.index > lastIndex) {
+      parts.push({
+        type: 'text',
+        content: text.slice(lastIndex, match.index)
+      })
+    }
+
+    // Check if it's bold (**) or italic (*)
+    if (match[1]) {
+      // Bold match (group 1)
+      parts.push({
+        type: 'bold',
+        content: match[1]
+      })
+    } else if (match[2]) {
+      // Italic match (group 2)
+      parts.push({
+        type: 'italic',
+        content: match[2]
+      })
+    }
 
     lastIndex = match.index + match[0].length
   }

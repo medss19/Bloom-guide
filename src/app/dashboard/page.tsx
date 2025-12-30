@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { UserStats, QuizResult, FlashcardSet, WeakTopic } from '@/lib/types'
-import { getStats, getQuizResults, getFlashcardSets, getWeakTopics } from '@/lib/storage'
+import { UserStats, QuizResult, FlashcardSet, WeakTopic, MultiplayerResult } from '@/lib/types'
+import { getStats, getQuizResults, getFlashcardSets, getWeakTopics, getMultiplayerResults } from '@/lib/storage'
 import { resetAllData } from '@/lib/resetData'
 import FormattedText from '@/components/FormattedText'
 
@@ -12,8 +12,10 @@ export default function Dashboard() {
   const [quizResults, setQuizResults] = useState<QuizResult[]>([])
   const [flashcardSets, setFlashcardSets] = useState<FlashcardSet[]>([])
   const [weakTopics, setWeakTopics] = useState<WeakTopic[]>([])
+  const [multiplayerResults, setMultiplayerResults] = useState<MultiplayerResult[]>([])
   const [selectedQuiz, setSelectedQuiz] = useState<QuizResult | null>(null)
   const [selectedFlashcardSet, setSelectedFlashcardSet] = useState<FlashcardSet | null>(null)
+  const [selectedMultiplayer, setSelectedMultiplayer] = useState<MultiplayerResult | null>(null)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
 
   const handleResetData = () => {
@@ -22,6 +24,7 @@ export default function Dashboard() {
     setQuizResults([])
     setFlashcardSets([])
     setWeakTopics([])
+    setMultiplayerResults([])
     setShowResetConfirm(false)
   }
 
@@ -31,6 +34,7 @@ export default function Dashboard() {
       setQuizResults(getQuizResults())
       setFlashcardSets(getFlashcardSets())
       setWeakTopics(getWeakTopics())
+      setMultiplayerResults(getMultiplayerResults())
     }
 
     loadData()
@@ -143,6 +147,33 @@ export default function Dashboard() {
             <p className="text-sm text-gray-500">Cards Learned</p>
           </div>
         </div>
+
+        {/* Multiplayer Stats */}
+        {stats && (stats.totalMultiplayerGames || 0) > 0 && (
+          <div className="bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl p-6 mb-6 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold">Multiplayer Games</h3>
+                <p className="text-white/80 text-sm">Compete with friends</p>
+              </div>
+              <div className="flex gap-6">
+                <div className="text-center">
+                  <p className="text-3xl font-bold">{stats.totalMultiplayerGames || 0}</p>
+                  <p className="text-xs text-white/80">Games</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-3xl font-bold">{stats.multiplayerWins || 0}</p>
+                  <p className="text-xs text-white/80">Wins</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Average Quiz Score */}
         {stats && stats.totalQuizzes > 0 && (
@@ -281,6 +312,58 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+
+        {/* Recent Multiplayer Games */}
+        {multiplayerResults.length > 0 && (
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mt-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="text-indigo-500">🎮</span>
+              Recent Multiplayer Games
+            </h2>
+            <div className="space-y-3">
+              {multiplayerResults.slice(0, 5).map((result) => (
+                <button
+                  key={result.id}
+                  onClick={() => setSelectedMultiplayer(result)}
+                  className="w-full flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      result.won ? 'bg-yellow-100' : 'bg-indigo-100'
+                    }`}>
+                      {result.won ? (
+                        <svg className="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ) : (
+                        <span className="text-sm font-bold text-indigo-600">#{result.rank}</span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">{result.topic}</p>
+                      <p className="text-xs text-gray-400">
+                        {formatDate(result.completedAt)} • {result.totalPlayers} players
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <p className={`font-bold ${result.won ? 'text-yellow-600' : 'text-indigo-600'}`}>
+                        {result.score}/{result.total}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {result.won ? 'Winner!' : `Rank #${result.rank}`}
+                      </p>
+                    </div>
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Weak Topics - Need to Review */}
         {weakTopics.length > 0 && (
@@ -587,6 +670,151 @@ export default function Dashboard() {
             <div className="px-6 py-4 border-t border-gray-100 bg-white">
               <button
                 onClick={() => setSelectedFlashcardSet(null)}
+                className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Multiplayer Detail Modal */}
+      {selectedMultiplayer && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className={`px-6 py-5 border-b border-gray-100 ${
+              selectedMultiplayer.won
+                ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
+                : 'bg-gradient-to-r from-indigo-500 to-purple-500'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="text-white">
+                  <h2 className="text-xl font-bold">{selectedMultiplayer.topic}</h2>
+                  <p className="text-sm opacity-90">
+                    {formatDate(selectedMultiplayer.completedAt)} • {selectedMultiplayer.totalPlayers} players
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedMultiplayer(null)}
+                  className="p-2 text-white/80 hover:text-white rounded-lg"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Result Summary */}
+            <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
+              <div className="flex items-center justify-center gap-8">
+                <div className="text-center">
+                  <p className={`text-3xl font-bold ${selectedMultiplayer.won ? 'text-yellow-600' : 'text-indigo-600'}`}>
+                    #{selectedMultiplayer.rank}
+                  </p>
+                  <p className="text-sm text-gray-500">Rank</p>
+                </div>
+                <div className="text-center">
+                  <p className={`text-3xl font-bold ${selectedMultiplayer.won ? 'text-yellow-600' : 'text-indigo-600'}`}>
+                    {selectedMultiplayer.score}/{selectedMultiplayer.total}
+                  </p>
+                  <p className="text-sm text-gray-500">Score</p>
+                </div>
+                <div className="text-center">
+                  <p className={`text-3xl font-bold ${selectedMultiplayer.won ? 'text-yellow-600' : 'text-indigo-600'}`}>
+                    {Math.round((selectedMultiplayer.score / selectedMultiplayer.total) * 100)}%
+                  </p>
+                  <p className="text-sm text-gray-500">Accuracy</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Leaderboard & Missed Questions */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {/* Final Standings */}
+              <div className="mb-6">
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  Final Standings
+                </h3>
+                <div className="space-y-2">
+                  {selectedMultiplayer.players
+                    .sort((a, b) => b.score - a.score)
+                    .map((player, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex items-center gap-3 p-3 rounded-xl ${
+                          idx === 0 ? 'bg-yellow-50 border border-yellow-200' :
+                          player.isYou ? 'bg-indigo-50 border border-indigo-200' : 'bg-gray-50'
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                          idx === 0 ? 'bg-yellow-500 text-white' :
+                          idx === 1 ? 'bg-gray-400 text-white' :
+                          idx === 2 ? 'bg-orange-400 text-white' : 'bg-gray-300 text-gray-600'
+                        }`}>
+                          {idx + 1}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">
+                            {player.name}
+                            {player.isYou && (
+                              <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full ml-2">
+                                You
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <p className="font-bold text-gray-900">{player.score}/{selectedMultiplayer.total}</p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {/* Missed Questions */}
+              {selectedMultiplayer.missedQuestions && selectedMultiplayer.missedQuestions.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Questions You Missed ({selectedMultiplayer.missedQuestions.length})
+                  </h3>
+                  <div className="space-y-3">
+                    {selectedMultiplayer.missedQuestions.map((q, idx) => (
+                      <div key={idx} className="bg-gray-50 rounded-xl p-4">
+                        <div className="font-medium text-gray-900 mb-3">
+                          <FormattedText text={q.question} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-red-50 rounded-lg p-3 border border-red-100">
+                            <p className="text-xs text-red-400 uppercase tracking-wide mb-1">Your Answer</p>
+                            <div className="text-red-700 text-sm">
+                              <FormattedText text={q.userAnswer} />
+                            </div>
+                          </div>
+                          <div className="bg-green-50 rounded-lg p-3 border border-green-100">
+                            <p className="text-xs text-green-400 uppercase tracking-wide mb-1">Correct</p>
+                            <div className="text-green-700 text-sm">
+                              <FormattedText text={q.correctAnswer} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-100 bg-white">
+              <button
+                onClick={() => setSelectedMultiplayer(null)}
                 className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
               >
                 Close

@@ -5,6 +5,10 @@ import Providers from '@/components/Providers'
 export const metadata: Metadata = {
   title: 'BloomGuide - AI That Teaches, Not Answers',
   description: 'An ethical AI learning assistant that guides students through concepts instead of handing out solutions.',
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  },
 }
 
 export default function RootLayout({

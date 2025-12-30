@@ -1,16 +1,48 @@
-import { UserStats, QuizResult, FlashcardSet, MissedQuestion, WeakTopic, StudiedCard } from './types'
+import { UserStats, QuizResult, FlashcardSet, MissedQuestion, WeakTopic, StudiedCard, MultiplayerResult } from './types'
 
-const STATS_KEY = 'bloomguide_stats'
-const QUIZ_RESULTS_KEY = 'bloomguide_quizzes'
-const FLASHCARD_SETS_KEY = 'bloomguide_flashcards'
-const WEAK_TOPICS_KEY = 'bloomguide_weak_topics'
+// Base storage keys
+const BASE_KEYS = {
+  stats: 'bloomguide_stats',
+  quizzes: 'bloomguide_quizzes',
+  flashcards: 'bloomguide_flashcards',
+  weakTopics: 'bloomguide_weak_topics',
+  multiplayer: 'bloomguide_multiplayer'
+}
+
+// Current user ID for prefixing storage keys
+let currentUserId: string | null = null
+
+// Set the current user ID (call this when user signs in/out)
+export function setCurrentUser(userId: string | null): void {
+  currentUserId = userId
+}
+
+// Get the current user ID
+export function getCurrentUser(): string | null {
+  return currentUserId
+}
+
+// Get storage key with user prefix
+function getKey(baseKey: string): string {
+  if (currentUserId) {
+    return `${baseKey}_${currentUserId}`
+  }
+  return baseKey
+}
+
+// Legacy key names for backwards compatibility
+const STATS_KEY = BASE_KEYS.stats
+const QUIZ_RESULTS_KEY = BASE_KEYS.quizzes
+const FLASHCARD_SETS_KEY = BASE_KEYS.flashcards
+const WEAK_TOPICS_KEY = BASE_KEYS.weakTopics
+const MULTIPLAYER_RESULTS_KEY = BASE_KEYS.multiplayer
 
 export function getStats(): UserStats {
   if (typeof window === 'undefined') {
     return getDefaultStats()
   }
 
-  const data = localStorage.getItem(STATS_KEY)
+  const data = localStorage.getItem(getKey(STATS_KEY))
   if (data) {
     const parsed = JSON.parse(data)
     return { ...getDefaultStats(), ...parsed }
@@ -24,9 +56,11 @@ function getDefaultStats(): UserStats {
     totalExplains: 0,
     totalQuizzes: 0,
     totalFlashcards: 0,
+    totalMultiplayerGames: 0,
     quizzesPassed: 0,
     avgQuizScore: 0,
     flashcardsLearned: 0,
+    multiplayerWins: 0,
     streak: 0,
     lastActiveDate: '',
     recentTopics: []
@@ -66,7 +100,7 @@ export function recordExplain(topic: string): void {
   stats.totalExplains += 1
   updateStreak(stats)
   addRecentTopic(stats, topic)
-  localStorage.setItem(STATS_KEY, JSON.stringify(stats))
+  localStorage.setItem(getKey(STATS_KEY), JSON.stringify(stats))
 }
 
 export function recordQuizResult(
@@ -87,7 +121,7 @@ export function recordQuizResult(
 
   updateStreak(stats)
   addRecentTopic(stats, topic)
-  localStorage.setItem(STATS_KEY, JSON.stringify(stats))
+  localStorage.setItem(getKey(STATS_KEY), JSON.stringify(stats))
 
   // Save quiz result with missed questions
   const results = getQuizResults()
@@ -100,7 +134,7 @@ export function recordQuizResult(
     completedAt: Date.now(),
     missedQuestions
   })
-  localStorage.setItem(QUIZ_RESULTS_KEY, JSON.stringify(results.slice(0, 20)))
+  localStorage.setItem(getKey(QUIZ_RESULTS_KEY), JSON.stringify(results.slice(0, 20)))
 
   // Update weak topics if there are missed questions
   if (missedQuestions && missedQuestions.length > 0) {
@@ -135,19 +169,19 @@ function updateWeakTopics(topic: string, missedQuestions: MissedQuestion[]): voi
 
   // Sort by missed count (most missed first) and keep top 10
   weakTopics.sort((a, b) => b.missedCount - a.missedCount)
-  localStorage.setItem(WEAK_TOPICS_KEY, JSON.stringify(weakTopics.slice(0, 10)))
+  localStorage.setItem(getKey(WEAK_TOPICS_KEY), JSON.stringify(weakTopics.slice(0, 10)))
 }
 
 export function getWeakTopics(): WeakTopic[] {
   if (typeof window === 'undefined') return []
-  const data = localStorage.getItem(WEAK_TOPICS_KEY)
+  const data = localStorage.getItem(getKey(WEAK_TOPICS_KEY))
   return data ? JSON.parse(data) : []
 }
 
 export function removeWeakTopic(topic: string): void {
   const weakTopics = getWeakTopics()
   const filtered = weakTopics.filter(wt => wt.topic.toLowerCase() !== topic.toLowerCase())
-  localStorage.setItem(WEAK_TOPICS_KEY, JSON.stringify(filtered))
+  localStorage.setItem(getKey(WEAK_TOPICS_KEY), JSON.stringify(filtered))
 }
 
 export function recordFlashcardSet(
@@ -161,7 +195,7 @@ export function recordFlashcardSet(
   stats.flashcardsLearned += learned
   updateStreak(stats)
   addRecentTopic(stats, topic)
-  localStorage.setItem(STATS_KEY, JSON.stringify(stats))
+  localStorage.setItem(getKey(STATS_KEY), JSON.stringify(stats))
 
   // Save flashcard set with card details
   const sets = getFlashcardSets()
@@ -173,21 +207,70 @@ export function recordFlashcardSet(
     completedAt: Date.now(),
     cards
   })
-  localStorage.setItem(FLASHCARD_SETS_KEY, JSON.stringify(sets.slice(0, 20)))
+  localStorage.setItem(getKey(FLASHCARD_SETS_KEY), JSON.stringify(sets.slice(0, 20)))
 }
 
 export function getQuizResults(): QuizResult[] {
   if (typeof window === 'undefined') return []
-  const data = localStorage.getItem(QUIZ_RESULTS_KEY)
+  const data = localStorage.getItem(getKey(QUIZ_RESULTS_KEY))
   return data ? JSON.parse(data) : []
 }
 
 export function getFlashcardSets(): FlashcardSet[] {
   if (typeof window === 'undefined') return []
-  const data = localStorage.getItem(FLASHCARD_SETS_KEY)
+  const data = localStorage.getItem(getKey(FLASHCARD_SETS_KEY))
   return data ? JSON.parse(data) : []
 }
 
 export function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2)
+}
+
+// Multiplayer results
+export function getMultiplayerResults(): MultiplayerResult[] {
+  if (typeof window === 'undefined') return []
+  const data = localStorage.getItem(getKey(MULTIPLAYER_RESULTS_KEY))
+  return data ? JSON.parse(data) : []
+}
+
+export function recordMultiplayerResult(
+  roomId: string,
+  topic: string,
+  score: number,
+  total: number,
+  rank: number,
+  totalPlayers: number,
+  players: { name: string; score: number; isYou: boolean }[],
+  missedQuestions?: MissedQuestion[]
+): void {
+  const stats = getStats()
+  const won = rank === 1
+
+  stats.totalMultiplayerGames += 1
+  if (won) stats.multiplayerWins += 1
+  updateStreak(stats)
+  addRecentTopic(stats, topic)
+  localStorage.setItem(getKey(STATS_KEY), JSON.stringify(stats))
+
+  // Save multiplayer result
+  const results = getMultiplayerResults()
+  results.unshift({
+    id: generateId(),
+    roomId,
+    topic,
+    score,
+    total,
+    rank,
+    totalPlayers,
+    won,
+    completedAt: Date.now(),
+    missedQuestions,
+    players
+  })
+  localStorage.setItem(getKey(MULTIPLAYER_RESULTS_KEY), JSON.stringify(results.slice(0, 20)))
+
+  // Update weak topics if there are missed questions
+  if (missedQuestions && missedQuestions.length > 0) {
+    updateWeakTopics(topic, missedQuestions)
+  }
 }

@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
     const room = joinRoom(
       roomId,
       session.user.id || session.user.email || 'anonymous',
-      session.user.name || 'Player'
+      session.user.name || 'Player',
+      session.user.image || undefined
     )
 
     if (!room) {
