@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateResponse } from '@/lib/gemini'
-import { LearningMode } from '@/lib/prompts'
+import { LearningMode, Message } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
   try {
-    const { input, mode } = await request.json()
+    const { input, mode, history } = await request.json()
 
     if (!input || typeof input !== 'string') {
       return NextResponse.json(
@@ -20,7 +20,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const response = await generateResponse(input, mode as LearningMode)
+    const conversationHistory: Message[] = Array.isArray(history) ? history : []
+    const response = await generateResponse(input, mode as LearningMode, conversationHistory)
 
     return NextResponse.json({ response })
   } catch (error) {
