@@ -17,6 +17,7 @@ export default function ExplainMode({ topic, onComplete, onBack }: ExplainModePr
   const [followUpInput, setFollowUpInput] = useState('')
   const [conversation, setConversation] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
   const hasFetched = useRef(false)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
 
   // Fetch explanation on mount (with guard against double-fetch in Strict Mode)
   useEffect(() => {
@@ -25,6 +26,13 @@ export default function ExplainMode({ topic, onComplete, onBack }: ExplainModePr
     fetchExplanation()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Auto-scroll to bottom when conversation updates
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
+    }
+  }, [conversation, isLoading])
 
   const fetchExplanation = async () => {
     try {
@@ -108,9 +116,9 @@ export default function ExplainMode({ topic, onComplete, onBack }: ExplainModePr
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="h-screen flex flex-col bg-gradient-to-b from-blue-50 to-white">
       {/* Header */}
-      <header className="sticky top-0 bg-white/80 backdrop-blur-sm border-b border-gray-100 z-10">
+      <header className="flex-shrink-0 bg-white/80 backdrop-blur-sm border-b border-gray-100 z-10">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-4">
           <button
             onClick={onBack}
@@ -136,48 +144,53 @@ export default function ExplainMode({ topic, onComplete, onBack }: ExplainModePr
         </div>
       </header>
 
-      {/* Content */}
-      <main className="max-w-3xl mx-auto px-4 py-6">
-        {isLoading && !explanation ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900">Getting your explanation...</h3>
-            <p className="text-gray-500 text-sm mt-2">Learning about {topic}</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {conversation.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`rounded-2xl p-5 ${
-                  msg.role === 'assistant'
-                    ? 'bg-white shadow-sm border border-gray-100'
-                    : 'bg-blue-50 ml-8'
-                }`}
-              >
-                {msg.role === 'assistant' && (
-                  <div className="flex items-center gap-2 mb-3 text-blue-600">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                    <span className="text-xs font-medium uppercase tracking-wide">Explanation</span>
+      {/* Scrollable Content */}
+      <main
+        ref={chatContainerRef}
+        className="flex-1 overflow-y-auto"
+      >
+        <div className="max-w-3xl mx-auto px-4 py-6 pb-32">
+          {isLoading && !explanation ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900">Getting your explanation...</h3>
+              <p className="text-gray-500 text-sm mt-2">Learning about {topic}</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {conversation.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`rounded-2xl p-5 ${
+                    msg.role === 'assistant'
+                      ? 'bg-white shadow-sm border border-gray-100'
+                      : 'bg-blue-50 ml-8'
+                  }`}
+                >
+                  {msg.role === 'assistant' && (
+                    <div className="flex items-center gap-2 mb-3 text-blue-600">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      <span className="text-xs font-medium uppercase tracking-wide">Explanation</span>
+                    </div>
+                  )}
+                  <div className="prose prose-sm max-w-none text-gray-700">
+                    <MathText>{msg.content}</MathText>
                   </div>
-                )}
-                <div className="prose prose-sm max-w-none text-gray-700">
-                  <MathText>{msg.content}</MathText>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {isLoading && explanation && (
-              <div className="flex items-center gap-2 text-gray-400 py-4">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-              </div>
-            )}
-          </div>
-        )}
+              {isLoading && explanation && (
+                <div className="flex items-center gap-2 text-gray-400 py-4">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Follow-up input */}
