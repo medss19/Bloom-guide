@@ -10,12 +10,14 @@ import ReviewMode from '@/components/ReviewMode'
 import NotesMode from '@/components/NotesMode'
 import VoiceInput from '@/components/VoiceInput'
 import AuthButton from '@/components/AuthButton'
+import MultiplayerMode from '@/components/MultiplayerMode'
 
 export default function Home() {
   const [currentMode, setCurrentMode] = useState<LearningMode | null>(null)
   const [topic, setTopic] = useState('')
   const [inputValue, setInputValue] = useState('')
   const [showReview, setShowReview] = useState(false)
+  const [showMultiplayer, setShowMultiplayer] = useState(false)
   const [weakTopics, setWeakTopics] = useState<WeakTopic[]>([])
 
   useEffect(() => {
@@ -330,6 +332,29 @@ export default function Home() {
             </button>
           </div>
 
+          {/* Multiplayer Mode Button */}
+          <div className="mt-6">
+            <button
+              onClick={() => setShowMultiplayer(true)}
+              className="w-full p-4 rounded-2xl border-2 border-indigo-200 bg-gradient-to-r from-indigo-50 to-purple-50 hover:border-indigo-400 hover:shadow-lg transition-all group"
+            >
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-gray-900">Multiplayer Quiz</p>
+                  <p className="text-sm text-gray-500">Compete with friends in real-time!</p>
+                </div>
+                <svg className="w-5 h-5 text-indigo-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </button>
+          </div>
+
           {/* Quick topics */}
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-400 mb-3">Try these topics:</p>
@@ -379,6 +404,11 @@ export default function Home() {
       <footer className="py-6 text-center text-sm text-gray-400">
         Built for CodeSpring Hackathon 2025
       </footer>
+
+      {/* Multiplayer Modal */}
+      {showMultiplayer && (
+        <MultiplayerMode onClose={() => setShowMultiplayer(false)} />
+      )}
     </div>
   )
 }
