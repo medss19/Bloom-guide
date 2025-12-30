@@ -8,6 +8,7 @@ import QuizMode from '@/components/QuizMode'
 import FlashcardMode from '@/components/FlashcardMode'
 import ReviewMode from '@/components/ReviewMode'
 import NotesMode from '@/components/NotesMode'
+import VoiceInput from '@/components/VoiceInput'
 
 export default function Home() {
   const [currentMode, setCurrentMode] = useState<LearningMode | null>(null)
@@ -157,29 +158,32 @@ export default function Home() {
 
           {/* Input */}
           <div className="mb-8">
-            <div className="relative">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="e.g., Photosynthesis, Pythagorean theorem, JavaScript loops..."
-                className="w-full px-5 py-4 text-lg rounded-2xl border-2 border-gray-200 focus:border-bloom-500 focus:outline-none transition-colors bg-white shadow-sm"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && inputValue.trim()) {
-                    handleStartMode('explain')
-                  }
-                }}
-              />
-              {inputValue && (
-                <button
-                  onClick={() => setInputValue('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
+            <div className="flex gap-3">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="e.g., Photosynthesis, Pythagorean theorem, JavaScript loops..."
+                  className="w-full px-5 py-4 text-lg rounded-2xl border-2 border-gray-200 focus:border-bloom-500 focus:outline-none transition-colors bg-white shadow-sm"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && inputValue.trim()) {
+                      handleStartMode('explain')
+                    }
+                  }}
+                />
+                {inputValue && (
+                  <button
+                    onClick={() => setInputValue('')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              <VoiceInput onTranscript={(text) => setInputValue(text)} />
             </div>
           </div>
 
