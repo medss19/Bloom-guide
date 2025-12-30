@@ -98,10 +98,13 @@ Generate the study notes now:`
     console.error('Notes API Error:', error)
 
     // Check for quota/rate limit errors
-    const err = error as { status?: number; message?: string }
-    if (err.status === 429 || (err.message && err.message.includes('quota'))) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('Too Many Requests')) {
       return NextResponse.json(
-        { error: 'API limit reached. Please wait a moment and try again.' },
+        {
+          error: 'API rate limit reached. The free tier allows limited requests. Please wait a moment and try again.',
+          isRateLimit: true
+        },
         { status: 429 }
       )
     }

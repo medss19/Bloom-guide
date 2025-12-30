@@ -106,6 +106,19 @@ Rules:
     return NextResponse.json({ room: updatedRoom })
   } catch (error) {
     console.error('Start game error:', error)
+
+    // Check for rate limit error
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('Too Many Requests')) {
+      return NextResponse.json(
+        {
+          error: 'API rate limit reached. The free tier allows limited requests. Please wait a moment and try again.',
+          isRateLimit: true
+        },
+        { status: 429 }
+      )
+    }
+
     return NextResponse.json(
       { error: 'Failed to start game' },
       { status: 500 }

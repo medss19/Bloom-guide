@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import MathText from './MathText'
 
 interface ExplainModeProps {
   topic: string
@@ -166,8 +167,8 @@ export default function ExplainMode({ topic, onComplete, onBack }: ExplainModePr
                     <span className="text-xs font-medium uppercase tracking-wide">Explanation</span>
                   </div>
                 )}
-                <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap">
-                  {msg.content}
+                <div className="prose prose-sm max-w-none text-gray-700">
+                  <MathText>{msg.content}</MathText>
                 </div>
               </div>
             ))}

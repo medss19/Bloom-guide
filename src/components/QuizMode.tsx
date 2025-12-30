@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { QuizQuestion, MissedQuestion } from '@/lib/types'
-import FormattedText from './FormattedText'
+import MathText from './MathText'
 
 interface QuizModeProps {
   topic: string
@@ -240,7 +240,7 @@ export default function QuizMode({ topic, onComplete, onClose }: QuizModeProps) 
         {/* Question */}
         <div className="flex-1 overflow-y-auto p-6">
           <div className="text-lg font-semibold text-gray-900 mb-6">
-            <FormattedText text={currentQuestion?.question || ''} />
+            <MathText>{currentQuestion?.question || ''}</MathText>
           </div>
 
           {/* Options */}
@@ -280,7 +280,7 @@ export default function QuizMode({ topic, onComplete, onClose }: QuizModeProps) 
                     {letter}
                   </span>
                   <span className="flex-1 text-gray-700">
-                    <FormattedText text={option} />
+                    <MathText>{option}</MathText>
                   </span>
                   {showResult && idx === currentQuestion.correctIndex && (
                     <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
@@ -304,7 +304,7 @@ export default function QuizMode({ topic, onComplete, onClose }: QuizModeProps) 
                 {isCorrect ? '✓ Correct!' : '✗ Not quite'}
               </p>
               <div className="text-sm text-gray-600 mt-1">
-                <FormattedText text={currentQuestion?.explanation || ''} />
+                <MathText>{currentQuestion?.explanation || ''}</MathText>
               </div>
             </div>
           )}

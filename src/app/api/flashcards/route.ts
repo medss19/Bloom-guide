@@ -30,10 +30,13 @@ Return ONLY valid JSON in this exact format, no other text:
 
 Rules:
 - Exactly 6 flashcards
-- Front: A question, term, or concept (brief)
+- Front: A question, term, or concept to test knowledge
 - Back: The answer, definition, or explanation (1-2 sentences max)
 - Cover key concepts of the topic
-- Progress from basic to advanced`
+- Progress from basic to advanced
+- For programming topics: Include actual code using \`inline code\` or code blocks in both front and back where relevant
+- For math topics: Include formulas using $math$ notation
+- Make cards specific and educational, not vague`
 
     const result = await model.generateContent(prompt)
     const response = result.response
@@ -55,6 +58,19 @@ Rules:
     return NextResponse.json(flashcardData)
   } catch (error) {
     console.error('Flashcard API Error:', error)
+
+    // Check for rate limit error
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('Too Many Requests')) {
+      return NextResponse.json(
+        {
+          error: 'API rate limit reached. The free tier allows limited requests. Please wait a moment and try again.',
+          isRateLimit: true
+        },
+        { status: 429 }
+      )
+    }
+
     return NextResponse.json(
       { error: 'Failed to generate flashcards. Please try again.' },
       { status: 500 }

@@ -30,13 +30,16 @@ Return ONLY valid JSON in this exact format, no other text:
   ]
 }
 
-Rules:
-- Exactly 5 questions
-- Exactly 4 options each (A, B, C, D)
+CRITICAL Rules:
+- Exactly 5 questions with varying difficulty (easy to hard)
+- Exactly 4 options each
 - correctIndex is 0-3 (index of correct answer)
-- Mix difficulty levels
-- Keep questions clear and concise
-- Explanations should be 1-2 sentences`
+- IMPORTANT: If a question references code, a formula, or an example, you MUST include it DIRECTLY in the question text itself using markdown code blocks (\`\`\`code\`\`\`) or inline code (\`code\`). NEVER say "the following code" without showing the actual code in the question.
+- For programming topics: Include actual code snippets in the question
+- For math topics: Include the actual equation/formula using $math$ notation
+- Make questions specific and testable, not vague
+- Randomize which option (A/B/C/D) is correct - don't always make A or B correct
+- Explanations should clearly explain WHY the answer is correct (1-2 sentences)`
 
     const result = await model.generateContent(prompt)
     const response = result.response
@@ -58,6 +61,19 @@ Rules:
     return NextResponse.json(quizData)
   } catch (error) {
     console.error('Quiz API Error:', error)
+
+    // Check for rate limit error
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('Too Many Requests')) {
+      return NextResponse.json(
+        {
+          error: 'API rate limit reached. The free tier allows limited requests. Please wait a moment and try again.',
+          isRateLimit: true
+        },
+        { status: 429 }
+      )
+    }
+
     return NextResponse.json(
       { error: 'Failed to generate quiz. Please try again.' },
       { status: 500 }

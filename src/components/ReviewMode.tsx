@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { WeakTopic } from '@/lib/types'
 import { removeWeakTopic } from '@/lib/storage'
-import FormattedText from './FormattedText'
+import MathText from './MathText'
 
 interface ReviewModeProps {
   weakTopics: WeakTopic[]
@@ -16,6 +16,40 @@ export default function ReviewMode({ weakTopics, onStartQuiz, onStartExplain, on
   const [selectedTopic, setSelectedTopic] = useState<WeakTopic | null>(null)
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [showAnswer, setShowAnswer] = useState(false)
+  const [deepDiveExplanation, setDeepDiveExplanation] = useState<string | null>(null)
+  const [isLoadingExplanation, setIsLoadingExplanation] = useState(false)
+
+  const handleLearnMore = async (question: string, correctAnswer: string, topic: string) => {
+    setIsLoadingExplanation(true)
+    setDeepDiveExplanation(null)
+
+    try {
+      const res = await fetch('/api/explain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic: `Why is "${correctAnswer}" the correct answer to: "${question}" (Topic: ${topic})`,
+          history: []
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to get explanation')
+      }
+
+      setDeepDiveExplanation(data.explanation)
+    } catch (err) {
+      setDeepDiveExplanation('Sorry, could not load explanation. Please try again.')
+    } finally {
+      setIsLoadingExplanation(false)
+    }
+  }
+
+  const handleCloseDeepDive = () => {
+    setDeepDiveExplanation(null)
+  }
 
   const handleMarkMastered = (topic: string) => {
     removeWeakTopic(topic)
@@ -51,7 +85,7 @@ export default function ReviewMode({ weakTopics, onStartQuiz, onStartExplain, on
             <div className="bg-gray-50 rounded-xl p-5 mb-4">
               <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Question you missed:</p>
               <div className="text-gray-900 font-medium">
-                <FormattedText text={currentQuestion.question} />
+                <MathText>{currentQuestion.question}</MathText>
               </div>
             </div>
 
@@ -59,13 +93,13 @@ export default function ReviewMode({ weakTopics, onStartQuiz, onStartExplain, on
               <div className="bg-red-50 rounded-xl p-4 border border-red-100">
                 <p className="text-xs text-red-400 uppercase tracking-wide mb-1">Your answer</p>
                 <div className="text-red-700 text-sm">
-                  <FormattedText text={currentQuestion.userAnswer} />
+                  <MathText>{currentQuestion.userAnswer}</MathText>
                 </div>
               </div>
               <div className="bg-green-50 rounded-xl p-4 border border-green-100">
                 <p className="text-xs text-green-400 uppercase tracking-wide mb-1">Correct answer</p>
                 <div className="text-green-700 text-sm">
-                  <FormattedText text={currentQuestion.correctAnswer} />
+                  <MathText>{currentQuestion.correctAnswer}</MathText>
                 </div>
               </div>
             </div>
@@ -81,7 +115,36 @@ export default function ReviewMode({ weakTopics, onStartQuiz, onStartExplain, on
               <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
                 <p className="text-xs text-blue-400 uppercase tracking-wide mb-1">Why?</p>
                 <div className="text-blue-800 text-sm">
-                  <FormattedText text={currentQuestion.explanation} />
+                  <MathText>{currentQuestion.explanation}</MathText>
+                </div>
+              </div>
+            )}
+
+            {/* Deep Dive Explanation */}
+            {isLoadingExplanation && (
+              <div className="mt-4 bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+                <div className="flex items-center gap-2 text-indigo-600">
+                  <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm font-medium">Getting detailed explanation...</span>
+                </div>
+              </div>
+            )}
+
+            {deepDiveExplanation && !isLoadingExplanation && (
+              <div className="mt-4 bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-indigo-500 uppercase tracking-wide font-medium">Detailed Explanation</p>
+                  <button
+                    onClick={handleCloseDeepDive}
+                    className="text-indigo-400 hover:text-indigo-600"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="text-indigo-900 text-sm">
+                  <MathText>{deepDiveExplanation}</MathText>
                 </div>
               </div>
             )}
@@ -94,6 +157,7 @@ export default function ReviewMode({ weakTopics, onStartQuiz, onStartExplain, on
                 if (currentCardIndex > 0) {
                   setCurrentCardIndex(currentCardIndex - 1)
                   setShowAnswer(false)
+                  setDeepDiveExplanation(null)
                 }
               }}
               disabled={currentCardIndex === 0}
@@ -106,10 +170,15 @@ export default function ReviewMode({ weakTopics, onStartQuiz, onStartExplain, on
 
             <div className="flex gap-2">
               <button
-                onClick={() => onStartExplain(selectedTopic.topic)}
-                className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200"
+                onClick={() => handleLearnMore(
+                  currentQuestion.question,
+                  currentQuestion.correctAnswer,
+                  selectedTopic.topic
+                )}
+                disabled={isLoadingExplanation}
+                className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 disabled:opacity-50"
               >
-                Learn More
+                {isLoadingExplanation ? 'Loading...' : 'Learn More'}
               </button>
               <button
                 onClick={() => onStartQuiz(selectedTopic.topic)}
@@ -124,6 +193,7 @@ export default function ReviewMode({ weakTopics, onStartQuiz, onStartExplain, on
                 if (currentCardIndex < selectedTopic.sampleQuestions.length - 1) {
                   setCurrentCardIndex(currentCardIndex + 1)
                   setShowAnswer(false)
+                  setDeepDiveExplanation(null)
                 }
               }}
               disabled={currentCardIndex === selectedTopic.sampleQuestions.length - 1}

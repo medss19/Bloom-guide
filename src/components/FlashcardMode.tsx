@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Flashcard, StudiedCard } from '@/lib/types'
-import FormattedText from './FormattedText'
+import MathText from './MathText'
 
 interface FlashcardModeProps {
   topic: string
@@ -373,7 +373,7 @@ export default function FlashcardMode({ topic, onComplete, onClose }: FlashcardM
               >
                 <p className="text-xs uppercase tracking-wide opacity-70 mb-4">Question</p>
                 <div className="text-xl font-medium text-center leading-relaxed">
-                  <FormattedText text={currentCard?.front || ''} />
+                  <MathText>{currentCard?.front || ''}</MathText>
                 </div>
                 <div className="absolute bottom-4 flex items-center gap-1 text-xs opacity-70">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -393,7 +393,7 @@ export default function FlashcardMode({ topic, onComplete, onClose }: FlashcardM
               >
                 <p className="text-xs uppercase tracking-wide opacity-70 mb-4">Answer</p>
                 <div className="text-lg font-medium text-center leading-relaxed">
-                  <FormattedText text={currentCard?.back || ''} />
+                  <MathText>{currentCard?.back || ''}</MathText>
                 </div>
               </div>
             </div>

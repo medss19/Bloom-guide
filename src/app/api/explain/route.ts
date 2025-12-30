@@ -100,6 +100,19 @@ Example: [Fun analogy or example]
     throw lastError || new Error('Failed after retries')
   } catch (error) {
     console.error('Explain API Error:', error)
+
+    // Check for rate limit error
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('Too Many Requests')) {
+      return NextResponse.json(
+        {
+          error: 'API rate limit reached. The free tier allows limited requests. Please wait a moment and try again.',
+          isRateLimit: true
+        },
+        { status: 429 }
+      )
+    }
+
     return NextResponse.json(
       { error: 'Failed to generate explanation. Please try again.' },
       { status: 500 }

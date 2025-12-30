@@ -4,7 +4,7 @@
 
 > An ethical AI tutor that guides students through understanding rather than handing out solutions. Because real learning happens when you figure it out yourself.
 
-**Live Demo**: [bloomguide.vercel.app](https://bloomguide.vercel.app)
+**Live Demo**: [bloomguide.vercel.app](https://bloomguide.vercel.app) | **Devpost**: [View Submission](https://devpost.com/software/bloomguide-ai-that-teaches-not-answers)
 
 ---
 
@@ -92,7 +92,7 @@ src/
 
 ## Timeline
 
-Found this hackathon **1 day before deadline**. Built everything — from idea to deployment — in **~8 hours**.
+Found this hackathon **1 day before deadline**. Built everything — from idea to deployment — in **~6 hours**.
 
 Late to the party, but showed up anyway. Code is shipped. No regrets :)
 
