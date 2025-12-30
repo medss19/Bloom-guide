@@ -2,155 +2,100 @@
 
 **AI That Teaches, Not Answers**
 
-An ethical AI learning assistant that guides students through concepts instead of handing out solutions. Built for CodeSpring Hackathon 2025.
+> An ethical AI tutor that guides students through understanding rather than handing out solutions. Because real learning happens when you figure it out yourself.
+
+**Live Demo**: [bloomguide.vercel.app](https://bloomguide.vercel.app)
+
+---
 
 ## The Problem
 
-Students increasingly rely on AI for instant answers, often sacrificing real understanding and academic integrity. Traditional AI assistants optimize for speed, not learning. This creates a dependency that hinders genuine knowledge development.
+Students are using AI to cheat. Schools are banning ChatGPT. But the real issue isn't AI—it's that current tools optimize for *answers*, not *learning*.
 
 ## The Solution
 
-BloomGuide is an AI-powered learning assistant designed to guide students through concepts rather than simply giving answers. It features three distinct learning modes that encourage active learning, critical thinking, and deep understanding.
+BloomGuide flips the script. Instead of giving answers, it:
+- Explains concepts step-by-step with examples
+- Tests understanding with AI-generated quizzes
+- Creates flashcards for active recall
+- Generates study notes you can download
+- Lets you compete with friends in multiplayer quiz battles
+
+---
 
 ## Features
 
-### Three Learning Modes
+| Feature | Description |
+|---------|-------------|
+| **Explain Mode** | Clear explanations with analogies and examples |
+| **Quiz Mode** | 5-question MCQ tests with instant feedback |
+| **Flashcards** | Swipeable cards with spaced repetition |
+| **Notes Mode** | Comprehensive notes with PDF export |
+| **Multiplayer** | Real-time quiz battles with friends |
+| **Voice Input** | Speak your topic instead of typing |
+| **Dashboard** | Track progress, streaks, weak topics |
+| **Google Sign-In** | Optional auth for multiplayer |
 
-| Mode | Description | Best For |
-|------|-------------|----------|
-| **Explain** | Clear, step-by-step explanations with examples and analogies | Understanding new concepts |
-| **Hint** | Guided hints without revealing answers | Problem-solving practice |
-| **Challenge** | AI asks questions to test understanding | Self-assessment |
-
-### Key Features
-
-- **Multi-turn Conversations** - Continue learning with context-aware follow-up questions
-- **Session History** - All your learning sessions are saved locally
-- **Dashboard Analytics** - Track your learning progress, streaks, and mode usage
-- **Topic Suggestions** - Quick-start with curated topics across subjects
-- **Mobile Responsive** - Learn on any device
-- **Clean, Professional UI** - Distraction-free learning environment
-
-### Subject Categories
-
-- Mathematics (Algebra, Calculus, Probability)
-- Science (Physics, Chemistry, Biology)
-- Programming (Data Structures, Algorithms, OOP)
-- Languages (Writing, Grammar, Literature)
+---
 
 ## Tech Stack
 
-- **Frontend**: Next.js 15 (App Router)
+- **Framework**: Next.js 15 (App Router)
 - **Styling**: Tailwind CSS
-- **AI**: Google Gemini 2.5 Flash API
-- **Storage**: localStorage (client-side persistence)
+- **AI**: Google Gemini 2.5 Flash
+- **Auth**: NextAuth.js (Google OAuth)
+- **Storage**: localStorage (per-user isolation)
 - **Deployment**: Vercel
 
-## Getting Started
+---
 
-### Prerequisites
-
-- Node.js 18+
-- Google Gemini API key ([Get one free](https://makersuite.google.com/app/apikey))
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/medss19/Bloom-guide.git
-cd Bloom-guide
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Create environment file:
-```bash
-cp .env.example .env.local
-```
-
-4. Add your Gemini API key to `.env.local`:
-```
-GEMINI_API_KEY=your_api_key_here
-```
-
-5. Run the development server:
-```bash
-npm run dev
-```
-
-6. Open [http://localhost:3000](http://localhost:3000)
-
-## Project Structure
+## Architecture
 
 ```
 src/
 ├── app/
-│   ├── api/chat/route.ts    # AI API endpoint
-│   ├── dashboard/page.tsx   # Analytics dashboard
-│   ├── layout.tsx           # Root layout
-│   ├── page.tsx             # Main chat interface
-│   └── globals.css          # Global styles
-├── components/
-│   ├── ChatInput.tsx        # Message input
-│   ├── ChatMessage.tsx      # Message display
-│   ├── ModeSelector.tsx     # Learning mode picker
-│   ├── Sidebar.tsx          # Session history
-│   └── WelcomeScreen.tsx    # Topic suggestions
+│   ├── api/           # AI endpoints (explain, quiz, flashcards, notes, multiplayer)
+│   ├── dashboard/     # Progress tracking
+│   └── page.tsx       # Main interface
+├── components/        # React components for each mode
 └── lib/
-    ├── gemini.ts            # Gemini API client
-    ├── prompts.ts           # Mode-specific prompts
-    ├── storage.ts           # localStorage utilities
-    └── types.ts             # TypeScript types
+    ├── storage.ts     # User-prefixed localStorage
+    ├── multiplayer.ts # Game room management
+    └── prompts.ts     # AI system prompts
 ```
-
-## How It Works
-
-1. **Select a Learning Mode** - Choose Explain, Hint, or Challenge based on your goal
-2. **Enter Your Topic** - Type a question or select from suggested topics
-3. **Learn Through Conversation** - Continue the dialogue with follow-up questions
-4. **Track Progress** - View your stats and session history on the Dashboard
-
-### The Magic: Mode-Specific AI Prompts
-
-Each learning mode uses carefully crafted system prompts that instruct the AI to:
-
-- **Explain**: Break down concepts, use analogies, provide examples
-- **Hint**: Guide without revealing, ask leading questions
-- **Challenge**: Generate questions, evaluate responses, provide feedback
-
-## Deployment
-
-Deploy to Vercel:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/medss19/Bloom-guide)
-
-**Important**: Add `GEMINI_API_KEY` to your Vercel environment variables.
-
-## Why BloomGuide Can Win
-
-1. **Innovative Approach** - Learning-mode lock is a unique differentiator
-2. **Ethical AI Use** - Addresses real concerns about AI in education
-3. **Complete Solution** - Full-featured with history, analytics, and multi-turn chat
-4. **Clean Execution** - Professional UI, robust architecture
-5. **Strong Narrative** - "AI that teaches, not answers" is memorable
-
-## Demo Script
-
-1. Show the problem: Traditional AI gives direct answers
-2. Introduce BloomGuide: AI that guides instead
-3. Demo Explain Mode: Watch concepts unfold step-by-step
-4. Demo Hint Mode: Get guidance without spoilers
-5. Demo Challenge Mode: Test understanding with AI-generated questions
-6. Show Dashboard: Track learning progress
-7. Close: "BloomGuide helps students learn, not cheat"
-
-## License
-
-MIT
 
 ---
 
-Built with love for **CodeSpring Hackathon 2025** - Where Ideas Bloom into Innovation
+## What Makes It Different
+
+1. **Learning-First Design** — Every feature is built around understanding, not shortcuts
+2. **Weak Topic Tracking** — Missed quiz questions become review targets
+3. **Multiplayer Competition** — Social learning with real-time quiz battles
+4. **Per-User Data** — Sign in and your progress follows you
+5. **Works Without Login** — Solo features need no account
+
+---
+
+## Future Enhancements
+
+| Enhancement | Description |
+|-------------|-------------|
+| **Database Storage** | Replace localStorage with PostgreSQL/MongoDB for cross-device sync and data persistence |
+| **Spaced Repetition** | Implement SM-2 algorithm for intelligent flashcard scheduling |
+| **Teacher Dashboard** | Let educators create classes, assign topics, and track student progress |
+| **AI Difficulty Scaling** | Adapt quiz difficulty based on user performance history |
+| **Collaborative Study Rooms** | Persistent study groups with shared flashcard decks |
+| **Mobile App** | Native iOS/Android apps with offline support |
+| **LMS Integration** | Connect with Canvas, Google Classroom, Moodle |
+
+---
+
+## Timeline
+
+Found this hackathon **1 day before deadline**. Built everything — from idea to deployment — in **~8 hours**.
+
+Late to the party, but showed up anyway. Code is shipped. No regrets :)
+
+---
+
+Built for **CodeSpring Hackathon 2025** — Where Ideas Bloom into Innovation
