@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+import { getApiKeyFromRequest, createGeminiClient } from '@/lib/gemini'
 
 async function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -18,6 +16,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const apiKey = getApiKeyFromRequest(request)
+    const genAI = createGeminiClient(apiKey)
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
     const prompt = `You are an expert educator creating comprehensive study notes for a student about: "${topic}"

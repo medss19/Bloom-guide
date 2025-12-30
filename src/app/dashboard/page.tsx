@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { UserStats, QuizResult, FlashcardSet, WeakTopic, MultiplayerResult } from '@/lib/types'
-import { getStats, getQuizResults, getFlashcardSets, getWeakTopics, getMultiplayerResults } from '@/lib/storage'
+import { getStats, getQuizResults, getFlashcardSets, getWeakTopics, getMultiplayerResults, setCurrentUser } from '@/lib/storage'
 import { resetAllData } from '@/lib/resetData'
 import FormattedText from '@/components/FormattedText'
 
 export default function Dashboard() {
+  const { data: session, status } = useSession()
   const [stats, setStats] = useState<UserStats | null>(null)
   const [quizResults, setQuizResults] = useState<QuizResult[]>([])
   const [flashcardSets, setFlashcardSets] = useState<FlashcardSet[]>([])
@@ -29,6 +31,17 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
+    // Wait for session to load before reading data
+    if (status === 'loading') return
+
+    // Set user context for storage keys
+    if (session?.user) {
+      const userId = session.user.id || session.user.email || null
+      setCurrentUser(userId)
+    } else {
+      setCurrentUser(null)
+    }
+
     const loadData = () => {
       setStats(getStats())
       setQuizResults(getQuizResults())
@@ -43,7 +56,7 @@ export default function Dashboard() {
     window.addEventListener('focus', handleFocus)
 
     return () => window.removeEventListener('focus', handleFocus)
-  }, [])
+  }, [session, status])
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('en-US', {

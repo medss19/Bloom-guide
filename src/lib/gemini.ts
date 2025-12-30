@@ -2,6 +2,17 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { buildPromptWithHistory } from './prompts'
 import { LearningMode, Message } from './types'
 
+// Helper to get API key from request headers (user's key takes priority)
+export function getApiKeyFromRequest(request: Request): string {
+  const userApiKey = request.headers.get('x-gemini-api-key')
+  return userApiKey || process.env.GEMINI_API_KEY || ''
+}
+
+// Helper to create Gemini client with optional user API key
+export function createGeminiClient(apiKey: string): GoogleGenerativeAI {
+  return new GoogleGenerativeAI(apiKey)
+}
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
 async function delay(ms: number) {

@@ -5,6 +5,7 @@ import { useSession, signIn } from 'next-auth/react'
 import { GameRoom } from '@/lib/multiplayer'
 import MultiplayerLobby from './MultiplayerLobby'
 import MultiplayerGame from './MultiplayerGame'
+import { apiPost } from '@/lib/api'
 
 interface MultiplayerModeProps {
   onClose: () => void
@@ -111,11 +112,7 @@ export default function MultiplayerMode({ onClose }: MultiplayerModeProps) {
     setError(null)
 
     try {
-      const res = await fetch('/api/multiplayer/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: topic.trim() })
-      })
+      const res = await apiPost('/api/multiplayer/create', { topic: topic.trim() })
 
       const data = await res.json()
 
@@ -142,11 +139,7 @@ export default function MultiplayerMode({ onClose }: MultiplayerModeProps) {
     setError(null)
 
     try {
-      const res = await fetch('/api/multiplayer/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId: roomCode.trim().toUpperCase() })
-      })
+      const res = await apiPost('/api/multiplayer/join', { roomId: roomCode.trim().toUpperCase() })
 
       const data = await res.json()
 

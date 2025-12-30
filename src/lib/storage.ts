@@ -226,6 +226,69 @@ export function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2)
 }
 
+// Migrate anonymous data to user account on login
+export function migrateAnonymousData(userId: string): void {
+  if (typeof window === 'undefined') return
+
+  const allBaseKeys = Object.values(BASE_KEYS)
+
+  allBaseKeys.forEach(baseKey => {
+    const anonymousKey = baseKey // non-prefixed key
+    const userKey = `${baseKey}_${userId}` // user-prefixed key
+
+    const anonymousData = localStorage.getItem(anonymousKey)
+
+    if (anonymousData) {
+      // Check if user already has data (from previous login)
+      const existingUserData = localStorage.getItem(userKey)
+
+      if (!existingUserData) {
+        // No existing user data - migrate anonymous data
+        localStorage.setItem(userKey, anonymousData)
+      } else {
+        // User has existing data - merge (user data takes priority, but add counts)
+        try {
+          const anonParsed = JSON.parse(anonymousData)
+          const userParsed = JSON.parse(existingUserData)
+
+          // For stats, merge the counts
+          if (baseKey === BASE_KEYS.stats) {
+            const merged = {
+              ...anonParsed,
+              ...userParsed,
+              totalExplains: (userParsed.totalExplains || 0) + (anonParsed.totalExplains || 0),
+              totalQuizzes: (userParsed.totalQuizzes || 0) + (anonParsed.totalQuizzes || 0),
+              totalFlashcards: (userParsed.totalFlashcards || 0) + (anonParsed.totalFlashcards || 0),
+              totalMultiplayerGames: (userParsed.totalMultiplayerGames || 0) + (anonParsed.totalMultiplayerGames || 0),
+              quizzesPassed: (userParsed.quizzesPassed || 0) + (anonParsed.quizzesPassed || 0),
+              flashcardsLearned: (userParsed.flashcardsLearned || 0) + (anonParsed.flashcardsLearned || 0),
+              multiplayerWins: (userParsed.multiplayerWins || 0) + (anonParsed.multiplayerWins || 0),
+              // Keep user's streak and recent topics
+              streak: userParsed.streak || anonParsed.streak || 0,
+              lastActiveDate: userParsed.lastActiveDate || anonParsed.lastActiveDate || '',
+              recentTopics: [...new Set([...(userParsed.recentTopics || []), ...(anonParsed.recentTopics || [])])].slice(0, 10)
+            }
+            localStorage.setItem(userKey, JSON.stringify(merged))
+          } else if (Array.isArray(anonParsed) && Array.isArray(userParsed)) {
+            // For arrays (quizzes, flashcards, etc.), merge and dedupe by id
+            const existingIds = new Set(userParsed.map((item: { id: string }) => item.id))
+            const newItems = anonParsed.filter((item: { id: string }) => !existingIds.has(item.id))
+            const merged = [...userParsed, ...newItems].slice(0, 20)
+            localStorage.setItem(userKey, JSON.stringify(merged))
+          }
+        } catch {
+          // If parsing fails, just use user data
+        }
+      }
+
+      // Clear anonymous data after migration
+      localStorage.removeItem(anonymousKey)
+    }
+  })
+
+  console.log('BloomGuide: Migrated anonymous data to user account')
+}
+
 // Multiplayer results
 export function getMultiplayerResults(): MultiplayerResult[] {
   if (typeof window === 'undefined') return []

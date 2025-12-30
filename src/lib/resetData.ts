@@ -21,8 +21,12 @@ function getKey(baseKey: string): string {
 export function resetAllData(): void {
   if (typeof window === 'undefined') return
 
+  // Remove both prefixed (user-specific) and non-prefixed (shared) keys
   BASE_STORAGE_KEYS.forEach(key => {
+    // Remove user-prefixed key
     localStorage.removeItem(getKey(key))
+    // Also remove non-prefixed key to prevent stale data on refresh
+    localStorage.removeItem(key)
   })
 
   console.log('BloomGuide: All data has been reset')

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Flashcard, StudiedCard } from '@/lib/types'
 import MathText from './MathText'
+import { apiPost } from '@/lib/api'
 
 interface FlashcardModeProps {
   topic: string
@@ -34,11 +35,7 @@ export default function FlashcardMode({ topic, onComplete, onClose }: FlashcardM
       setIsLoading(true)
       setError(null)
 
-      const res = await fetch('/api/flashcards', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic }),
-      })
+      const res = await apiPost('/api/flashcards', { topic })
 
       const data = await res.json()
 

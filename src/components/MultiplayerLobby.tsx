@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { GameRoom } from '@/lib/multiplayer'
+import { apiPost } from '@/lib/api'
 
 interface MultiplayerLobbyProps {
   room: GameRoom
@@ -54,11 +55,7 @@ export default function MultiplayerLobby({ room: initialRoom, onGameStart, onClo
     setError(null)
 
     try {
-      const res = await fetch('/api/multiplayer/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId: room.id })
-      })
+      const res = await apiPost('/api/multiplayer/start', { roomId: room.id })
 
       const data = await res.json()
 

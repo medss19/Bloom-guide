@@ -35,6 +35,7 @@ BloomGuide flips the script. Instead of giving answers, it:
 | **Voice Input** | Speak your topic instead of typing |
 | **Dashboard** | Track progress, streaks, weak topics |
 | **Google Sign-In** | Optional auth for multiplayer |
+| **Custom API Key** | Use your own Gemini API key if rate limited |
 
 ---
 
@@ -73,6 +74,7 @@ src/
 3. **Multiplayer Competition** — Social learning with real-time quiz battles
 4. **Per-User Data** — Sign in and your progress follows you
 5. **Works Without Login** — Solo features need no account
+6. **Bring Your Own API Key** — Use your own Gemini key if rate limited (stored locally, never exposed)
 
 ---
 

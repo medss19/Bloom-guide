@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { QuizQuestion, MissedQuestion } from '@/lib/types'
 import MathText from './MathText'
+import { apiPost } from '@/lib/api'
 
 interface QuizModeProps {
   topic: string
@@ -34,11 +35,7 @@ export default function QuizMode({ topic, onComplete, onClose }: QuizModeProps) 
       setIsLoading(true)
       setError(null)
 
-      const res = await fetch('/api/quiz', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic }),
-      })
+      const res = await apiPost('/api/quiz', { topic })
 
       const data = await res.json()
 

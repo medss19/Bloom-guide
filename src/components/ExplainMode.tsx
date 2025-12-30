@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import MathText from './MathText'
+import { apiPost } from '@/lib/api'
 
 interface ExplainModeProps {
   topic: string
@@ -15,9 +16,12 @@ export default function ExplainMode({ topic, onComplete, onBack }: ExplainModePr
   const [error, setError] = useState<string | null>(null)
   const [followUpInput, setFollowUpInput] = useState('')
   const [conversation, setConversation] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
+  const hasFetched = useRef(false)
 
-  // Fetch explanation on mount
+  // Fetch explanation on mount (with guard against double-fetch in Strict Mode)
   useEffect(() => {
+    if (hasFetched.current) return
+    hasFetched.current = true
     fetchExplanation()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -27,11 +31,7 @@ export default function ExplainMode({ topic, onComplete, onBack }: ExplainModePr
       setIsLoading(true)
       setError(null)
 
-      const res = await fetch('/api/explain', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, history: [] }),
-      })
+      const res = await apiPost('/api/explain', { topic, history: [] })
 
       const data = await res.json()
 
@@ -60,14 +60,10 @@ export default function ExplainMode({ topic, onComplete, onBack }: ExplainModePr
     setIsLoading(true)
 
     try {
-      const res = await fetch('/api/explain', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          topic,
-          followUp: userMessage,
-          history: newConversation
-        }),
+      const res = await apiPost('/api/explain', {
+        topic,
+        followUp: userMessage,
+        history: newConversation
       })
 
       const data = await res.json()

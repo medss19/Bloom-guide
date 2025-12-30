@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { WeakTopic } from '@/lib/types'
 import { removeWeakTopic } from '@/lib/storage'
 import MathText from './MathText'
+import { apiPost } from '@/lib/api'
 
 interface ReviewModeProps {
   weakTopics: WeakTopic[]
@@ -19,18 +20,24 @@ export default function ReviewMode({ weakTopics, onStartQuiz, onStartExplain, on
   const [deepDiveExplanation, setDeepDiveExplanation] = useState<string | null>(null)
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false)
 
-  const handleLearnMore = async (question: string, correctAnswer: string, topic: string) => {
+  const handleLearnMore = async (question: string, correctAnswer: string, userAnswer: string, topic: string) => {
     setIsLoadingExplanation(true)
     setDeepDiveExplanation(null)
 
     try {
-      const res = await fetch('/api/explain', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          topic: `Why is "${correctAnswer}" the correct answer to: "${question}" (Topic: ${topic})`,
-          history: []
-        }),
+      const res = await apiPost('/api/explain', {
+        topic: topic,
+        followUp: `I got this question wrong and need help understanding it:
+
+Question: ${question}
+My wrong answer: ${userAnswer}
+Correct answer: ${correctAnswer}
+
+Please explain:
+1. Why is "${correctAnswer}" the correct answer?
+2. Why was my answer "${userAnswer}" incorrect?
+3. Help me understand this concept better so I don't make the same mistake again.`,
+        history: []
       })
 
       const data = await res.json()
@@ -173,6 +180,7 @@ export default function ReviewMode({ weakTopics, onStartQuiz, onStartExplain, on
                 onClick={() => handleLearnMore(
                   currentQuestion.question,
                   currentQuestion.correctAnswer,
+                  currentQuestion.userAnswer,
                   selectedTopic.topic
                 )}
                 disabled={isLoadingExplanation}

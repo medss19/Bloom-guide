@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getRoom, startGame, QuizQuestion } from '@/lib/multiplayer'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+import { getApiKeyFromRequest, createGeminiClient } from '@/lib/gemini'
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,6 +48,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate quiz questions
+    const apiKey = getApiKeyFromRequest(request)
+    const genAI = createGeminiClient(apiKey)
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
     const prompt = `Generate exactly 5 multiple choice questions about: "${room.topic}"

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+import { getApiKeyFromRequest, createGeminiClient } from '@/lib/gemini'
 
 async function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -18,6 +16,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const apiKey = getApiKeyFromRequest(request)
+    const genAI = createGeminiClient(apiKey)
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
     let prompt: string
@@ -57,20 +57,23 @@ Guidelines:
 - Keep it SHORT and FUN (max 150 words total)
 - Start with a simple one-sentence definition
 - Use ONE fun analogy or real-world example kids would understand
-- Break complex ideas into 2-3 bullet points
+- Break complex ideas into 2-3 bullet points on SEPARATE LINES
 - End with an encouraging note or fun fact
 - Use emojis sparingly to make it engaging (1-2 max)
 - Avoid jargon - explain like they're 10 years old
 
-Format your response like this:
-[One-sentence intro]
+IMPORTANT: Use proper markdown formatting with blank lines between sections. Each bullet point MUST be on its own line.
 
-Key Points:
-• [Point 1]
-• [Point 2]
-• [Point 3 if needed]
+Format your response EXACTLY like this (with blank lines between sections):
 
-Example: [Fun analogy or example]
+[One-sentence intro paragraph]
+
+**Key Points:**
+- [Point 1]
+- [Point 2]
+- [Point 3 if needed]
+
+**Example:** [Fun analogy or example]
 
 [Encouraging closing or fun fact]`
     }
