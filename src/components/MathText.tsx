@@ -35,9 +35,21 @@ export default function MathText({ children, className = '' }: MathTextProps) {
               </pre>
             )
           },
-          // Style paragraphs
+          // Style paragraphs - use block display for proper line breaks
           p: ({ children }) => (
-            <span className="inline">{children}</span>
+            <p className="mb-2 last:mb-0">{children}</p>
+          ),
+          // Style unordered lists
+          ul: ({ children }) => (
+            <ul className="list-disc list-inside my-2 space-y-1">{children}</ul>
+          ),
+          // Style ordered lists
+          ol: ({ children }) => (
+            <ol className="list-decimal list-inside my-2 space-y-1">{children}</ol>
+          ),
+          // Style list items
+          li: ({ children }) => (
+            <li className="text-inherit">{children}</li>
           ),
           // Style strong/bold
           strong: ({ children }) => (
